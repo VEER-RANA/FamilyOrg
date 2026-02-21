@@ -26,8 +26,8 @@ api.interceptors.response.use(
       // Clear stored credentials on 401
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      // Redirect to login
-      window.location.href = '/login'
+      // Redirect to public landing
+      window.location.href = '/'
     }
     return Promise.reject(error)
   }

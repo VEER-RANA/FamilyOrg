@@ -149,24 +149,38 @@ router.get('/attended', auth, async (req, res) => {
 
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    const events = (user.attendedArchive?.events || [])
+    const mappedEvents = (user.attendedArchive?.events || [])
       .map((event, index) => ({
-        _id: event.eventId || `archived-event-${index}`,
+        _id: String(event.eventId || `archived-event-${index}`),
         title: event.title,
         date: event.date,
         location: event.place
       }))
       .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 
-    const trips = (user.attendedArchive?.trips || [])
+    const mappedTrips = (user.attendedArchive?.trips || [])
       .map((trip, index) => ({
-        _id: trip.tripId || `archived-trip-${index}`,
+        _id: String(trip.tripId || `archived-trip-${index}`),
         title: trip.title,
         startDate: trip.startDate,
         endDate: trip.endDate,
         places: trip.place ? [trip.place] : []
       }))
       .sort((a, b) => new Date(b.endDate || 0) - new Date(a.endDate || 0));
+
+    const events = Array.from(
+      mappedEvents.reduce((acc, event) => {
+        if (!acc.has(event._id)) acc.set(event._id, event);
+        return acc;
+      }, new Map()).values()
+    );
+
+    const trips = Array.from(
+      mappedTrips.reduce((acc, trip) => {
+        if (!acc.has(trip._id)) acc.set(trip._id, trip);
+        return acc;
+      }, new Map()).values()
+    );
 
     res.json({ events, trips });
   } catch (err) {

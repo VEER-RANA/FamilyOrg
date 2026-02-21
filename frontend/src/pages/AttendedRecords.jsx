@@ -267,9 +267,9 @@ export default function AttendedRecords() {
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', overflow: 'visible', position: 'relative' }}>
-                    {dayEvents.map(event => (
+                    {dayEvents.map((event, index) => (
                       <div
-                        key={event._id}
+                        key={`event-${event._id}-${index}`}
                         className="calendar-event-item"
                         style={{
                           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -321,9 +321,9 @@ export default function AttendedRecords() {
                       </div>
                     ))}
 
-                    {dayTrips.map(trip => (
+                    {dayTrips.map((trip, index) => (
                       <div
-                        key={trip._id}
+                        key={`trip-${trip._id}-${index}`}
                         className="calendar-trip-item"
                         style={{
                           background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
