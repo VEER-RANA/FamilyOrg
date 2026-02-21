@@ -141,8 +141,8 @@ router.patch('/:id', auth, async (req, res) => {
 router.get('/:id/tasks', auth, async (req, res) => {
   try {
     const tasks = await TripTask.find({ tripId: req.params.id })
-      .populate('createdBy', 'name email')
-      .populate('assignedTo', 'name email')
+      .populate('createdBy', 'name') // email
+      .populate('assignedTo', 'name') // email
       .sort({ createdAt: -1 });
     res.json(tasks);
   } catch (err) {
@@ -163,8 +163,8 @@ router.post('/:id/tasks', auth, async (req, res) => {
       dueDate
     });
     const populatedTask = await TripTask.findById(task._id)
-      .populate('createdBy', 'name email')
-      .populate('assignedTo', 'name email');
+      .populate('createdBy', 'name') // email
+      .populate('assignedTo', 'name'); // email
     res.json(populatedTask);
   } catch (err) {
     console.error(err);
@@ -187,7 +187,7 @@ router.patch('/:tripId/tasks/:taskId', auth, async (req, res) => {
       req.params.taskId,
       updateData,
       { new: true }
-    ).populate('createdBy', 'name email').populate('assignedTo', 'name email');
+    ).populate('createdBy', 'name').populate('assignedTo', 'name'); // email email
     
     res.json(task);
   } catch (err) {
@@ -213,8 +213,8 @@ router.delete('/:tripId/tasks/:taskId', auth, async (req, res) => {
 router.get('/:id/expenses', auth, async (req, res) => {
   try {
     const expenses = await TripExpense.find({ tripId: req.params.id })
-      .populate('paidBy', 'name email')
-      .populate('splitAmong', 'name email')
+      .populate('paidBy', 'name') // email
+      .populate('splitAmong', 'name') // email
       .sort({ date: -1 });
     res.json(expenses);
   } catch (err) {
@@ -237,8 +237,8 @@ router.post('/:id/expenses', auth, async (req, res) => {
       date: date || new Date()
     });
     const populatedExpense = await TripExpense.findById(expense._id)
-      .populate('paidBy', 'name email')
-      .populate('splitAmong', 'name email');
+      .populate('paidBy', 'name') // email
+      .populate('splitAmong', 'name'); // email
     res.json(populatedExpense);
   } catch (err) {
     console.error(err);
@@ -263,7 +263,7 @@ router.delete('/:tripId/expenses/:expenseId', auth, async (req, res) => {
 router.get('/:id/comments', auth, async (req, res) => {
   try {
     const comments = await TripComment.find({ tripId: req.params.id })
-      .populate('userId', 'name email')
+      .populate('userId', 'name') // email
       .sort({ createdAt: 1 });
     res.json(comments);
   } catch (err) {
@@ -304,11 +304,17 @@ router.post('/:id/comments', auth, async (req, res) => {
       relatedId: trip._id,
       relatedModel: 'Trip',
       relatedUser: req.user.id,
-      actionUrl: `/trips/${trip._id}`
+      actionUrl: `/trips/${trip._id}`,
+      emailTheme: {
+        type: 'trip',
+        theme: trip.theme,
+        title: trip.title,
+        label: `New Comment`
+      }
     })));
 
     const populatedComment = await TripComment.findById(comment._id)
-      .populate('userId', 'name email');
+      .populate('userId', 'name'); // email
     res.json(populatedComment);
   } catch (err) {
     console.error(err);
@@ -347,7 +353,7 @@ router.delete('/:tripId/comments/:commentId', auth, async (req, res) => {
 router.get('/:id/photos', auth, async (req, res) => {
   try {
     const photos = await TripPhoto.find({ tripId: req.params.id })
-      .populate('userId', 'name email')
+      .populate('userId', 'name') // email
       .sort({ createdAt: -1 });
     res.json(photos);
   } catch (err) {
@@ -381,7 +387,7 @@ router.post('/:id/photos', auth, async (req, res) => {
       caption
     });
 
-    const populated = await TripPhoto.findById(created._id).populate('userId', 'name email');
+    const populated = await TripPhoto.findById(created._id).populate('userId', 'name'); // email
     res.json(populated);
   } catch (err) {
     console.error(err);

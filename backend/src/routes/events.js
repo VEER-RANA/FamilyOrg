@@ -173,7 +173,7 @@ router.delete('/:id', auth, async (req, res) => {
 router.get('/:id/comments', auth, async (req, res) => {
   try {
     const comments = await EventComment.find({ eventId: req.params.id })
-      .populate('userId', 'name email')
+      .populate('userId', 'name') // email
       .sort({ createdAt: 1 });
     res.json(comments);
   } catch (err) {
@@ -215,11 +215,17 @@ router.post('/:id/comments', auth, async (req, res) => {
       relatedId: event._id,
       relatedModel: 'Event',
       relatedUser: req.user.id,
-      actionUrl: `/events/${event._id}`
+      actionUrl: `/events/${event._id}`,
+      emailTheme: {
+        type: 'event',
+        theme: event.theme,
+        title: event.title,
+        label: `New Comment`
+      }
     })));
 
     const populatedComment = await EventComment.findById(comment._id)
-      .populate('userId', 'name email');
+      .populate('userId', 'name'); // email
     res.json(populatedComment);
   } catch (err) {
     console.error(err);

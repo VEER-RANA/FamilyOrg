@@ -512,7 +512,7 @@ export default function TripDetails() {
             <div>📅 {formatDate(trip.startDate)} - {formatDate(trip.endDate)}  ({Math.ceil((new Date(trip.endDate) - new Date(trip.startDate)) / (1000 * 60 * 60 * 24))} days)</div>
             <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
               <div>👥 {acceptedParticipants.length} Attendees</div>
-              {trip.budget && <div>💰 ${trip.budget.toLocaleString()}</div>}
+              {trip.budget && <div>💰 ₹{trip.budget.toLocaleString()}</div>}
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', backgroundColor: '#2d343669', width: 'fit-content', padding: '8px 12px', borderRadius: '8px' }}> {/* rgba(255,255,255,0.2) */}
               <span>{getTripTheme(trip.theme).icon}</span>
@@ -605,7 +605,7 @@ export default function TripDetails() {
                 <div style={{ fontSize: '24px', marginBottom: '8px' }}>💰</div>
                  <div style={{ fontWeight: '600', marginBottom: '4px' }}>Total Expenses</div>
                  <div style={{ color: 'var(--text-light)', fontSize: '14px' }}>
-                   ${totalExpenses.toLocaleString()}
+                   ₹{totalExpenses.toLocaleString()}
                 </div>
               </div>
               <div style={{ padding: '20px', background: 'var(--bg-light)', borderRadius: '12px' }}>
@@ -895,7 +895,7 @@ export default function TripDetails() {
                 <div>
                   <div style={{ fontSize: '12px', color: 'var(--text-light)', marginBottom: '4px' }}>Total Expenses</div>
                   <div style={{ fontSize: '32px', fontWeight: '700', color: 'var(--blue)' }}>
-                    ${totalExpenses.toLocaleString()}
+                    ₹{totalExpenses.toLocaleString()}
                   </div>
                 </div>
               </div>
@@ -979,7 +979,7 @@ export default function TripDetails() {
                     </div>
                   </div>
                   <div style={{ fontWeight: '700', fontSize: '18px', color: 'var(--red)' }}>
-                    ${expense.amount.toLocaleString()}
+                    ₹{expense.amount.toLocaleString()}
                   </div>
                   <button onClick={() => handleDeleteExpense(expense._id)} style={{
                     background: 'transparent',

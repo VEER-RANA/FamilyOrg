@@ -13,6 +13,7 @@ export default function UserProfile() {
     const init = async () => {
       try {
         const profile = await refreshProfile()
+
         setForm({
           name: profile?.name || '',
           email: profile?.email || '',
@@ -178,6 +179,7 @@ export default function UserProfile() {
             </div>
           </form>
         </div>
+
       </div>
 
       <style>{`

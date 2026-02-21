@@ -2,6 +2,12 @@ import React, { useState, useContext, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { AuthContext } from '../context/AuthContext'
 
+const REGISTER_HIGHLIGHTS = [
+  'Plan events together faster.',
+  'Track trip tasks and expenses in one place.',
+  'Stay in sync with smart family notifications.',
+]
+
 export default function Register() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -9,6 +15,7 @@ export default function Register() {
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [highlightIndex, setHighlightIndex] = useState(0)
   const { register } = useContext(AuthContext)
   const navigate = useNavigate()
 
@@ -16,8 +23,24 @@ export default function Register() {
   const passwordValid = password.length >= 6
   const nameValid = name.trim().length > 0
   const canSubmit = emailValid && passwordValid && nameValid && !submitting
+  const strengthChecks = [
+    password.length >= 6,
+    /[A-Z]/.test(password) && /[a-z]/.test(password),
+    /\d/.test(password),
+    /[^A-Za-z0-9]/.test(password),
+  ]
+  const strengthScore = strengthChecks.filter(Boolean).length
+  const strengthPercent = [0, 30, 55, 78, 100][strengthScore]
+  const strengthLabel = ['Very weak', 'Weak', 'Fair', 'Good', 'Strong'][strengthScore]
 
   useEffect(() => { setError(null) }, [name, email, password])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHighlightIndex(prev => (prev + 1) % REGISTER_HIGHLIGHTS.length)
+    }, 2400)
+    return () => clearInterval(interval)
+  }, [])
 
   const submit = async e => {
     e.preventDefault()
@@ -40,12 +63,13 @@ export default function Register() {
         <h2 className="brand">Join FamilyOrg</h2>
         <p style={{
           textAlign: 'center',
-          color: 'var(--text-light)',
+          color: 'var(--auth-muted)',
           fontSize: '14px',
-          marginBottom: '24px'
+          marginBottom: '10px'
         }}>
           Create your account to get started
         </p>
+        <p key={REGISTER_HIGHLIGHTS[highlightIndex]} className="auth-dynamic-tip">✨ {REGISTER_HIGHLIGHTS[highlightIndex]}</p>
 
         <form onSubmit={submit} className="auth-form">
           <div>
@@ -60,7 +84,8 @@ export default function Register() {
                 style={{
                   transition: 'all 200ms',
                   borderColor: nameValid ? 'var(--blue)' : 'var(--border)',
-                  backgroundColor: nameValid ? 'rgba(84, 160, 255, 0.02)' : 'transparent'
+                  backgroundColor: nameValid ? 'rgba(255, 255, 255, 0.98)' : 'rgba(255, 255, 255, 0.94)',
+                  color: '#1f2937'
                 }}
               />
             </label>
@@ -79,7 +104,8 @@ export default function Register() {
                 style={{
                   transition: 'all 200ms',
                   borderColor: emailValid ? 'var(--blue)' : 'var(--border)',
-                  backgroundColor: emailValid ? 'rgba(84, 160, 255, 0.02)' : 'transparent'
+                  backgroundColor: emailValid ? 'rgba(255, 255, 255, 0.98)' : 'rgba(255, 255, 255, 0.94)',
+                  color: '#1f2937'
                 }}
               />
             </label>
@@ -91,31 +117,38 @@ export default function Register() {
                 🔒 Password
               </span>
               <div className="pw-row">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="At least 6 characters"
-                  style={{
-                    transition: 'all 200ms',
-                    borderColor: passwordValid ? 'var(--blue)' : 'var(--border)',
-                    backgroundColor: passwordValid ? 'rgba(84, 160, 255, 0.02)' : 'transparent'
-                  }}
-                />
-                <button
-                  type="button"
-                  className="show-btn"
-                  onClick={() => setShowPassword(s => !s)}
-                  style={{
-                    fontSize: '12px',
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0
-                  }}
-                >
-                  {showPassword ? '👁 Hide' : '🙈 Show'}
-                </button>
+                <div className="pw-field">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="At least 6 characters"
+                    style={{
+                      transition: 'all 200ms',
+                      borderColor: passwordValid ? 'var(--blue)' : 'var(--border)',
+                      backgroundColor: passwordValid ? 'rgba(255, 255, 255, 0.98)' : 'rgba(255, 255, 255, 0.94)',
+                      color: '#1f2937'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="show-btn"
+                    onClick={() => setShowPassword(s => !s)}
+                  >
+                    {showPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
               </div>
             </label>
+            <div className="strength-wrap" aria-live="polite">
+              <div className="strength-head">
+                <span>Password strength</span>
+                <strong>{password ? strengthLabel : '—'}</strong>
+              </div>
+              <div className="strength-track">
+                <div className="strength-fill" style={{ width: `${password ? strengthPercent : 0}%` }} />
+              </div>
+            </div>
             {!passwordValid && password && (
               <div className="error" style={{
                 marginTop: '8px',
@@ -173,21 +206,21 @@ export default function Register() {
         </form>
 
         <div style={{
-          marginTop: '24px',
-          paddingTop: '24px',
+          marginTop: '12px',
+          paddingTop: '12px',
           borderTop: '1px solid var(--border)',
           textAlign: 'center',
-          color: 'var(--text-light)',
+          color: 'var(--auth-muted)',
           fontSize: '14px'
         }}>
           Already have an account?{' '}
           <Link to="/login" style={{
-            color: 'var(--blue)',
+            color: 'var(--auth-link)',
             textDecoration: 'none',
             fontWeight: '600',
             cursor: 'pointer',
             transition: 'color 200ms'
-          }} onMouseEnter={e => e.target.style.color = 'var(--purple)'} onMouseLeave={e => e.target.style.color = 'var(--blue)'}>
+          }} onMouseEnter={e => e.target.style.color = 'var(--auth-link-hover)'} onMouseLeave={e => e.target.style.color = 'var(--auth-link)'}>
             Login here
           </Link>
         </div>
@@ -197,6 +230,46 @@ export default function Register() {
         @keyframes slideIn {
           from { transform: translateX(-20px); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .auth-dynamic-tip {
+          margin: 0 0 8px 0;
+          text-align: center;
+          color: var(--auth-muted);
+          font-size: 12px;
+          min-height: 18px;
+          animation: fadeUp 260ms ease;
+        }
+        .strength-wrap {
+          margin-top: 6px;
+        }
+        .strength-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 12px;
+          color: var(--auth-muted);
+          margin-bottom: 6px;
+        }
+        .strength-head strong {
+          color: var(--purple);
+          font-size: 12px;
+        }
+        .strength-track {
+          height: 8px;
+          background: #eef2f6;
+          border-radius: 999px;
+          overflow: hidden;
+          border: 1px solid var(--border);
+        }
+        .strength-fill {
+          height: 100%;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          transition: width 220ms ease;
+          border-radius: inherit;
         }
       `}</style>
     </div>

@@ -25,6 +25,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/', (req, res) => res.send('FamilyOrg API is running'));
+app.get('/health', (req, res) => res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() }));
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/events', require('./routes/events'));
@@ -70,7 +71,14 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
               relatedId: trip._id,
               relatedModel: 'Trip',
               actionUrl: `/trips/${trip._id}`,
-              priority: 'high'
+              priority: 'high',
+              emailTheme: {
+                type: 'trip',
+                theme: trip.theme,
+                title: trip.title,
+                label: 'Trip Reminder',
+                note: `Starts ${new Date(trip.startDate).toLocaleDateString('en-GB')}`
+              }
             });
           }
         }

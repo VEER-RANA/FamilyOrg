@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const User = require('../models/User');
+const Event = require('../models/Event');
+const Trip = require('../models/Trip');
 const bcrypt = require('bcryptjs');
 
 // Get all members (for invitations)
@@ -82,6 +84,91 @@ router.put('/password', auth, async (req, res) => {
     await user.save();
 
     return res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get attended (past) events and trips for current user
+router.get('/attended', auth, async (req, res) => {
+  try {
+    const now = new Date();
+
+    const [pastAcceptedEvents, pastAcceptedTrips] = await Promise.all([
+      Event.find({
+        date: { $lt: now },
+        $or: [
+          { createdBy: req.user.id },
+          { attendees: { $elemMatch: { userId: req.user.id, status: 'accepted' } } }
+        ]
+      })
+        .select('_id title date location')
+        .lean(),
+      Trip.find({
+        endDate: { $lt: now },
+        $or: [
+          { createdBy: req.user.id },
+          { participants: { $elemMatch: { userId: req.user.id, status: 'accepted' } } }
+        ]
+      })
+        .select('_id title startDate endDate places')
+        .lean()
+    ]);
+
+    const eventArchiveEntries = pastAcceptedEvents.map(event => ({
+      eventId: event._id,
+      title: event.title,
+      date: event.date,
+      place: event.location || ''
+    }));
+
+    const tripArchiveEntries = pastAcceptedTrips.map(trip => ({
+      tripId: trip._id,
+      title: trip.title,
+      startDate: trip.startDate,
+      endDate: trip.endDate,
+      place: Array.isArray(trip.places) && trip.places.length ? trip.places.join(', ') : ''
+    }));
+
+    const addToSetUpdates = {};
+    if (eventArchiveEntries.length) {
+      addToSetUpdates['attendedArchive.events'] = { $each: eventArchiveEntries };
+    }
+    if (tripArchiveEntries.length) {
+      addToSetUpdates['attendedArchive.trips'] = { $each: tripArchiveEntries };
+    }
+
+    const user = Object.keys(addToSetUpdates).length
+      ? await User.findByIdAndUpdate(
+        req.user.id,
+        { $addToSet: addToSetUpdates },
+        { new: true }
+      ).select('attendedArchive')
+      : await User.findById(req.user.id).select('attendedArchive');
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const events = (user.attendedArchive?.events || [])
+      .map((event, index) => ({
+        _id: event.eventId || `archived-event-${index}`,
+        title: event.title,
+        date: event.date,
+        location: event.place
+      }))
+      .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+    const trips = (user.attendedArchive?.trips || [])
+      .map((trip, index) => ({
+        _id: trip.tripId || `archived-trip-${index}`,
+        title: trip.title,
+        startDate: trip.startDate,
+        endDate: trip.endDate,
+        places: trip.place ? [trip.place] : []
+      }))
+      .sort((a, b) => new Date(b.endDate || 0) - new Date(a.endDate || 0));
+
+    res.json({ events, trips });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

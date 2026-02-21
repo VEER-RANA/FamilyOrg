@@ -275,6 +275,14 @@ router.post('/:invitationId/accept', auth, async (req, res) => {
 
     // Create notification for inviter
     const user = await User.findById(req.user.id);
+    const eventOrTrip = invitation.eventId ? await Event.findById(invitation.eventId) : await Trip.findById(invitation.tripId);
+    const itemType = invitation.eventId ? 'event' : 'trip';
+    const itemTheme = eventOrTrip?.theme;
+    const itemTitle = eventOrTrip?.title;
+    const acceptLabel = itemType === 'event'
+      ? getEventInviteLabel(itemTheme)
+      : getTripInviteLabel(itemTheme);
+
     const notificationMessage = `${user.name} accepted your invitation`;
 
     await notifyUser({
@@ -284,7 +292,14 @@ router.post('/:invitationId/accept', auth, async (req, res) => {
       message: notificationMessage,
       relatedId: invitation._id,
       relatedModel: 'Invitation',
-      relatedUser: req.user.id
+      relatedUser: req.user.id,
+      emailTheme: {
+        type: itemType,
+        theme: itemTheme,
+        title: itemTitle,
+        label: `${acceptLabel} Accepted`,
+        note: `${user.name} joined!`
+      }
     });
 
     res.json({ message: 'Invitation accepted', invitation });

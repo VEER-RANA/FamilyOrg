@@ -1,9 +1,26 @@
 const nodemailer = require('nodemailer');
+const https = require('https');
 
-const hasEmailConfig = () => Boolean(
-  process.env.GMAIL_USER && 
-  process.env.GMAIL_APP_PASSWORD
-);
+// Check which email service is configured
+const getEmailProvider = () => {
+  const brevoKey = process.env.BREVO_API_KEY;
+  const hasGmail = Boolean(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD);
+
+  const hasBrevo = brevoKey &&
+                   brevoKey.trim() !== '' &&
+                   !brevoKey.includes('your_') &&
+                   brevoKey.length > 20;
+
+  if (hasBrevo) {
+    return 'brevo';
+  }
+  if (hasGmail) {
+    return 'gmail';
+  }
+
+  console.warn('⚠️ No email provider configured. Set BREVO_API_KEY or GMAIL_USER/GMAIL_APP_PASSWORD in .env');
+  return null;
+};
 
 const escapeHtml = (value) => String(value)
   .replace(/&/g, '&amp;')
@@ -53,21 +70,55 @@ const getThemePalette = (emailTheme = {}) => {
   return paletteSet[key] || paletteSet.default;
 };
 
+const sendBrevoEmail = ({ to, subject, text, html }) => new Promise((resolve, reject) => {
+  const fromEmail = process.env.BREVO_FROM_EMAIL || 'noreply@familyorg.com';
+  const fromName = process.env.BREVO_FROM_NAME || 'FamilyOrg';
+  const payload = JSON.stringify({
+    sender: { email: fromEmail, name: fromName },
+    to: [{ email: to }],
+    subject,
+    textContent: text,
+    htmlContent: html
+  });
+
+  const request = https.request(
+    {
+      method: 'POST',
+      hostname: 'api.brevo.com',
+      path: '/v3/smtp/email',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload),
+        'api-key': process.env.BREVO_API_KEY
+      }
+    },
+    (response) => {
+      let data = '';
+      response.on('data', (chunk) => { data += chunk; });
+      response.on('end', () => {
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          const parsed = data ? JSON.parse(data) : {};
+          resolve({ messageId: parsed.messageId, accepted: [to], provider: 'brevo' });
+          return;
+        }
+        reject(new Error(`Brevo API error: ${response.statusCode} ${data}`));
+      });
+    }
+  );
+
+  request.on('error', (err) => reject(err));
+  request.write(payload);
+  request.end();
+});
+
 const sendNotificationEmail = async ({ to, subject, message, actionUrl, userName, emailTheme }) => {
-  if (!hasEmailConfig()) {
-    console.warn('Gmail SMTP not configured; skipping email send.');
+  const provider = getEmailProvider();
+
+  if (!provider) {
+    console.warn('No email provider configured (Brevo or Gmail); skipping email send.');
     return { skipped: true };
   }
   if (!to) return { skipped: true };
-
-  // Create transporter
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD
-    }
-  });
 
   const link = buildActionUrl(actionUrl);
   const palette = getThemePalette(emailTheme);
@@ -114,17 +165,31 @@ const sendNotificationEmail = async ({ to, subject, message, actionUrl, userName
   `;
 
   try {
-    const info = await transporter.sendMail({
-      from: `"FamilyOrg" <${process.env.GMAIL_USER}>`,
-      to,
-      subject,
-      text,
-      html
-    });
-    return { messageId: info.messageId, accepted: info.accepted };
+    if (provider === 'brevo') {
+      const info = await sendBrevoEmail({ to, subject, text, html });
+      return info;
+    } else {
+      // Use Gmail SMTP (works locally, blocked on Render)
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.GMAIL_USER,
+          pass: process.env.GMAIL_APP_PASSWORD
+        }
+      });
+      
+      const info = await transporter.sendMail({
+        from: `"FamilyOrg" <${process.env.GMAIL_USER}>`,
+        to,
+        subject,
+        text,
+        html
+      });
+      return { messageId: info.messageId, accepted: info.accepted, provider: 'gmail' };
+    }
   } catch (err) {
-    console.error('Email send failed:', err.message || err);
-    return { error: err };
+    console.error(`Email send failed (${provider}):`, err.message || err);
+    return { error: err, provider };
   }
 };
 

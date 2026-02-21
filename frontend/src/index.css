@@ -521,6 +521,10 @@ nav a:hover {
 
 /* Auth Pages */
 .auth-page {
+  --auth-text: #ffffff;
+  --auth-muted: rgba(255, 255, 255, 0.96);
+  --auth-link: #ffffff;
+  --auth-link-hover: #ffffff;
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -537,40 +541,43 @@ nav a:hover {
 }
 
 .auth-card {
-  background: white;
-  padding: 40px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.10));
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  padding: 28px;
   border-radius: 16px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 24px 45px rgba(0, 0, 0, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.45);
   max-width: 420px;
   width: 100%;
   animation: slideUp var(--transition-base);
+  color: var(--auth-text);
 }
 
 @media (max-width: 480px) {
   .auth-card {
-    padding: 30px 20px;
+    padding: 22px 16px;
   }
 }
 
 .auth-card h2 {
-  margin: 0 0 24px 0;
+  margin: 0 0 12px 0;
   font-size: 28px;
   font-weight: 700;
-  background: var(--bg-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--auth-text);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.20);
   text-align: center;
 }
 
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
 }
 
 .auth-form label {
-  margin-bottom: 6px;
+  margin-bottom: 2px;
+  color: var(--auth-text);
 }
 
 .pw-row {
@@ -579,29 +586,53 @@ nav a:hover {
   align-items: center;
 }
 
-.pw-row input {
+.pw-field {
+  position: relative;
   flex: 1;
 }
 
+.pw-field input {
+  width: 100%;
+  padding-right: 70px;
+}
+
 .show-btn {
-  background: none;
+  background: rgba(102, 126, 234, 0.15);
   border: none;
   cursor: pointer;
-  color: var(--text-light);
+  color: #2f3b8f;
   font-size: 12px;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 6px;
-  transition: background-color var(--transition-fast);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .show-btn:hover {
-  background-color: var(--bg-light);
+  background-color: rgba(102, 126, 234, 0.28);
+  color: #1f2a6b;
+}
+
+.auth-card input,
+.auth-card textarea,
+.auth-card select {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+.auth-card input::placeholder,
+.auth-card textarea::placeholder {
+  color: rgba(45, 52, 54, 0.78);
 }
 
 .error {
-  background: #fee;
+  background: rgba(255, 238, 238, 0.85);
   color: var(--red);
-  padding: 12px;
+  padding: 10px;
   border-radius: 8px;
   font-size: 13px;
   border-left: 3px solid var(--red);
