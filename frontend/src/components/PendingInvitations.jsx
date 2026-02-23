@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react'
 import api from '../services/api'
 import { AuthContext } from '../context/AuthContext'
 import DeclineReasonModal from './DeclineReasonModal'
+import { formatDate } from '../utils/date'
 
 export default function PendingInvitations({ onRefresh }) {
   const { user } = useContext(AuthContext)
@@ -14,6 +15,8 @@ export default function PendingInvitations({ onRefresh }) {
 
   const normalizeRole = (role) => (role === 'organizer' ? 'organizer' : 'participant')
   const getRoleEmoji = (role) => (normalizeRole(role) === 'organizer' ? '👑' : '👥')
+  const getInvitationDateLabel = (invitation) => (invitation.tripId ? 'Trip start' : 'Event date')
+  const getInvitationDate = (invitation) => formatDate(invitation.tripId?.startDate || invitation.eventId?.date)
 
   const fetchPendingInvitations = async () => {
     try {
@@ -126,6 +129,7 @@ export default function PendingInvitations({ onRefresh }) {
       {invitations.map(invitation => (
         <div
           key={invitation._id}
+          className="pending-invitation-card"
           style={{
             background: 'white',
             border: '1px solid var(--border)',
@@ -148,7 +152,7 @@ export default function PendingInvitations({ onRefresh }) {
             e.currentTarget.style.transform = 'translateY(0)'
           }}
         >
-          <div style={{ flex: 1 }}>
+          <div className="pending-invitation-content" style={{ flex: 1 }}>
             <h4 style={{
               margin: '0 0 8px 0',
               fontSize: '15px',
@@ -164,6 +168,15 @@ export default function PendingInvitations({ onRefresh }) {
             }}>
               From: {invitation.invitedBy?.name || 'Unknown'}
             </p>
+            {getInvitationDate(invitation) && (
+              <p style={{
+                margin: '0 0 8px 0',
+                fontSize: '13px',
+                color: 'var(--text-light)'
+              }}>
+                {getInvitationDateLabel(invitation)}: {getInvitationDate(invitation)}
+              </p>
+            )}
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
               <span style={{
                 background: 'var(--blue-light)',
@@ -188,40 +201,15 @@ export default function PendingInvitations({ onRefresh }) {
             </div>
           </div>
 
-          <div style={{
+          <div className="pending-invitation-actions" style={{
             display: 'flex',
+            flexDirection: 'column',
             gap: '8px',
-            marginLeft: '16px'
+            marginLeft: '16px',
+            justifyContent: 'center'
           }}>
             <button
-              onClick={() => handleDeclineClick(invitation)}
-              disabled={respondingId === invitation._id}
-              style={{
-                padding: '8px 14px',
-                background: 'var(--border)',
-                color: 'var(--text)',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: respondingId === invitation._id ? 'wait' : 'pointer',
-                fontWeight: '600',
-                fontSize: '13px',
-                transition: 'all 150ms',
-                opacity: respondingId === invitation._id ? 0.6 : 1
-              }}
-              onMouseEnter={e => {
-                if (respondingId !== invitation._id) {
-                  e.target.style.background = '#ffebee'
-                  e.target.style.color = 'var(--red)'
-                }
-              }}
-              onMouseLeave={e => {
-                e.target.style.background = 'var(--border)'
-                e.target.style.color = 'var(--text)'
-              }}
-            >
-              ✗ Decline
-            </button>
-            <button
+              className="pending-invitation-btn"
               onClick={() => handleAccept(invitation._id)}
               disabled={respondingId === invitation._id}
               style={{
@@ -234,7 +222,9 @@ export default function PendingInvitations({ onRefresh }) {
                 fontWeight: '600',
                 fontSize: '13px',
                 transition: 'all 150ms',
-                opacity: respondingId === invitation._id ? 0.7 : 1
+                opacity: respondingId === invitation._id ? 0.7 : 1,
+                whiteSpace: 'nowrap',
+                minWidth: '110px'
               }}
               onMouseEnter={e => {
                 if (respondingId !== invitation._id) {
@@ -248,6 +238,37 @@ export default function PendingInvitations({ onRefresh }) {
               }}
             >
               ✓ Accept
+            </button>
+            <button
+              className="pending-invitation-btn"
+              onClick={() => handleDeclineClick(invitation)}
+              disabled={respondingId === invitation._id}
+              style={{
+                padding: '8px 14px',
+                background: 'var(--border)',
+                color: 'var(--text)',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: respondingId === invitation._id ? 'wait' : 'pointer',
+                fontWeight: '600',
+                fontSize: '13px',
+                transition: 'all 150ms',
+                opacity: respondingId === invitation._id ? 0.6 : 1,
+                whiteSpace: 'nowrap',
+                minWidth: '110px'
+              }}
+              onMouseEnter={e => {
+                if (respondingId !== invitation._id) {
+                  e.target.style.background = '#ffebee'
+                  e.target.style.color = 'var(--red)'
+                }
+              }}
+              onMouseLeave={e => {
+                e.target.style.background = 'var(--border)'
+                e.target.style.color = 'var(--text)'
+              }}
+            >
+              ✗ Decline
             </button>
           </div>
         </div>
@@ -268,6 +289,37 @@ export default function PendingInvitations({ onRefresh }) {
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 900px) {
+          .pending-invitation-card {
+            align-items: flex-start !important;
+            gap: 12px;
+          }
+
+          .pending-invitation-actions {
+            margin-left: 0 !important;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .pending-invitation-card {
+            align-items: flex-start !important;
+          }
+
+          .pending-invitation-content {
+            width: calc(100% - 126px);
+          }
+
+          .pending-invitation-actions {
+            margin-left: 12px !important;
+            gap: 8px;
+          }
+
+          .pending-invitation-btn {
+            width: auto;
+            text-align: center;
+          }
         }
       `}</style>
     </div>

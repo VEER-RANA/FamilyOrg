@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useContext } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import React, { useEffect, useState, useContext, useRef, useCallback } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { formatDate } from '../utils/date'
 import SummaryCard from '../components/SummaryCard'
@@ -12,27 +12,42 @@ import { getEventTheme, getTripTheme } from '../utils/themeConfig'
 export default function Dashboard() {
   const { user } = useContext(AuthContext)
   const navigate = useNavigate()
-  const location = useLocation()
   const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [refreshing, setRefreshing] = useState(false)
+  const lastFetchAtRef = useRef(0)
+  const fetchInFlightRef = useRef(false)
 
-  const fetchSummary = async () => {
+  const fetchSummary = useCallback(async ({ force = false, bypassCache = false } = {}) => {
+    const nowTs = Date.now()
+    if (!force && nowTs - lastFetchAtRef.current < 15000) {
+      return
+    }
+    if (fetchInFlightRef.current) {
+      return
+    }
+
+    fetchInFlightRef.current = true
     try {
       setRefreshing(true)
-      const res = await api.get('/dashboard/summary')
+      const res = await api.get('/dashboard/summary', {
+        params: bypassCache ? { force: '1' } : undefined
+      })
       setSummary(res.data)
+      setError(null)
+      lastFetchAtRef.current = Date.now()
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load dashboard')
     } finally {
       setLoading(false)
       setRefreshing(false)
+      fetchInFlightRef.current = false
     }
-  }
+  }, [])
 
   useEffect(() => {
-    fetchSummary()
+    fetchSummary({ force: true })
     
     // Refetch summary when user comes back to dashboard
     const handleVisibilityChange = () => {
@@ -52,14 +67,7 @@ export default function Dashboard() {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.removeEventListener('focus', handleFocus)
     }
-  }, [])
-
-  // Refetch when location changes to dashboard
-  useEffect(() => {
-    if (location.pathname === '/dashboard') {
-      fetchSummary()
-    }
-  }, [location.pathname])
+  }, [fetchSummary])
 
   if (loading) return (
     <div className="dashboard-loader">
@@ -166,7 +174,7 @@ export default function Dashboard() {
           <CreateBox onCreated={fetchSummary} />
           <button 
             className="btn refresh-btn" 
-            onClick={fetchSummary}
+            onClick={() => fetchSummary({ force: true, bypassCache: true })}
             disabled={refreshing}
             style={{ opacity: refreshing ? 0.7 : 1 }}
           >
@@ -216,7 +224,9 @@ export default function Dashboard() {
               {summary.upcomingEvents.map(e => {
                 const themeData = getEventTheme(e.theme);
                 const isOrganizer = e.attendees?.some(a => {
-                  const userIdString = typeof a.userId === 'string' ? a.userId : a.userId?._id;
+                  const userIdString = typeof a.userId === 'string'
+                    ? a.userId
+                    : (a.userId?._id ? String(a.userId._id) : String(a.userId || ''));
                   return userIdString === user?.id && a.role === 'organizer';
                 });
                 const canDelete = user?.role === 'admin' || isOrganizer;
@@ -297,7 +307,9 @@ export default function Dashboard() {
               {summary.activeTrips.map(t => {
                 const themeData = getTripTheme(t.theme);
                 const isOrganizer = t.participants?.some(p => {
-                  const userIdString = typeof p.userId === 'string' ? p.userId : p.userId?._id;
+                  const userIdString = typeof p.userId === 'string'
+                    ? p.userId
+                    : (p.userId?._id ? String(p.userId._id) : String(p.userId || ''));
                   return userIdString === user?.id && p.role === 'organizer';
                 });
                 const canDelete = user?.role === 'admin' || isOrganizer;
