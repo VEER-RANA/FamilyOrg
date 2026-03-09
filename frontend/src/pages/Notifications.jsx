@@ -3,6 +3,31 @@ import api from '../services/api'
 import { AuthContext } from '../context/AuthContext'
 import { formatDate } from '../utils/date'
 
+function NotificationsSkeleton() {
+  return (
+    <div className="notifications-loader" aria-live="polite" aria-busy="true">
+      <div className="notifications-loader-header shimmer" />
+      <div className="notifications-loader-filters">
+        <span className="notifications-loader-chip shimmer" />
+        <span className="notifications-loader-chip shimmer" />
+        <span className="notifications-loader-chip shimmer" />
+      </div>
+      <div className="notifications-loader-list">
+        {Array.from({ length: 4 }).map((_, idx) => (
+          <div key={idx} className="notifications-loader-item">
+            <span className="notifications-loader-icon shimmer" />
+            <div className="notifications-loader-body">
+              <div className="notifications-loader-line shimmer" />
+              <div className="notifications-loader-line short shimmer" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <p>Syncing your updates...</p>
+    </div>
+  )
+}
+
 export default function Notifications() {
   const { user } = useContext(AuthContext)
   const [notifications, setNotifications] = useState([])
@@ -62,12 +87,7 @@ export default function Notifications() {
 
   const unreadCount = notifications.filter(n => !n.isRead).length
 
-  if (loading && !isRefreshing) return (
-    <div className="modern-loader">
-      <div className="shimmer-circle"></div>
-      <p>Syncing your updates...</p>
-    </div>
-  )
+  if (loading && !isRefreshing) return <NotificationsSkeleton />
 
   return (
     <div className="notif-wrapper">

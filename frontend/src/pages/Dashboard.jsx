@@ -9,6 +9,33 @@ import PendingInvitations from '../components/PendingInvitations'
 import { AuthContext } from '../context/AuthContext'
 import { getEventTheme, getTripTheme } from '../utils/themeConfig'
 
+function DashboardSkeleton() {
+  return (
+    <div className="dashboard-loader dashboard-skeleton-screen" aria-live="polite" aria-busy="true">
+      <div className="dashboard-skeleton-headline shimmer" />
+      <div className="dashboard-skeleton-subtitle shimmer" />
+
+      <div className="dashboard-skeleton-summary">
+        {Array.from({ length: 4 }).map((_, idx) => (
+          <div key={idx} className="dashboard-skeleton-card shimmer" />
+        ))}
+      </div>
+
+      <div className="dashboard-skeleton-panels">
+        {Array.from({ length: 3 }).map((_, idx) => (
+          <div key={idx} className="dashboard-skeleton-panel">
+            <div className="dashboard-skeleton-line shimmer" />
+            <div className="dashboard-skeleton-line shimmer" />
+            <div className="dashboard-skeleton-line short shimmer" />
+          </div>
+        ))}
+      </div>
+
+      <p>Fetching latest family updates...</p>
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const { user } = useContext(AuthContext)
   const navigate = useNavigate()
@@ -69,25 +96,9 @@ export default function Dashboard() {
     }
   }, [fetchSummary])
 
-  if (loading) return (
-    <div className="dashboard-loader">
-      <div style={{
-        display: 'inline-block',
-        animation: 'spin 1s linear infinite'
-      }}>⏳</div>
-      <p>Loading your dashboard...</p>
-    </div>
-  )
+  if (loading) return <DashboardSkeleton />
   if (error) return <div className="dashboard-error">⚠️ {error}</div>
-  if (!summary) return (
-    <div className="dashboard-loader">
-      <div style={{
-        display: 'inline-block',
-        animation: 'spin 1s linear infinite'
-      }}>⏳</div>
-      <p>Loading your dashboard...</p>
-    </div>
-  )
+  if (!summary) return <DashboardSkeleton />
 
   const { counts } = summary
   const pastEvents = summary.pastEvents || []
@@ -544,13 +555,6 @@ export default function Dashboard() {
         </div> */}
 
       </div>
-
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   )
 }

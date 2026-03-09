@@ -133,7 +133,7 @@ export default function CreateBox({ onCreated }){
               </label>
               <label>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>🗺️ Places (comma-separated)</span>
-                <input value={tripPlaces} onChange={e=>setTripPlaces(e.target.value)} placeholder="e.g., Paris, Rome, Barcelona" />
+                <input value={tripPlaces} onChange={e=>setTripPlaces(e.target.value)} placeholder="e.g., Chotila, Virpur, Somanath, Sarangpur" />
               </label>
               <label>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>📅 Start Date</span>

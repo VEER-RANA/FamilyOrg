@@ -9,6 +9,33 @@ import ThemeSelectorModal from '../components/ThemeSelectorModal'
 import { formatDate } from '../utils/date'
 import { getEventTheme } from '../utils/themeConfig'
 
+function EventDetailsSkeleton() {
+  return (
+    <div className="details-loader details-loader-event" aria-live="polite" aria-busy="true">
+      <div className="details-skeleton-banner shimmer" />
+      <div className="details-skeleton-tabs">
+        <span className="details-skeleton-tab shimmer" />
+        <span className="details-skeleton-tab shimmer" />
+        <span className="details-skeleton-tab shimmer" />
+      </div>
+      <div className="details-skeleton-grid">
+        <div className="details-skeleton-panel">
+          <div className="details-skeleton-line shimmer" />
+          <div className="details-skeleton-line shimmer" />
+          <div className="details-skeleton-line short shimmer" />
+        </div>
+        <div className="details-skeleton-panel">
+          <div className="details-skeleton-line shimmer" />
+          <div className="details-skeleton-line shimmer" />
+          <div className="details-skeleton-line shimmer" />
+          <div className="details-skeleton-line short shimmer" />
+        </div>
+      </div>
+      <p>Loading event details...</p>
+    </div>
+  )
+}
+
 export default function EventDetails() {
   const { eventId } = useParams()
   const navigate = useNavigate()
@@ -173,12 +200,7 @@ export default function EventDetails() {
   }
 
   if (loading) {
-    return (
-      <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-        <div style={{ fontSize: '48px', marginBottom: '16px' }}>📅</div>
-        <p style={{ color: 'var(--text-light)' }}>Loading event details...</p>
-      </div>
-    )
+    return <EventDetailsSkeleton />
   }
 
   if (error || !event) {

@@ -9,6 +9,33 @@ import ThemeSelectorModal from '../components/ThemeSelectorModal'
 import { formatDate } from '../utils/date'
 import { getTripTheme } from '../utils/themeConfig'
 
+function TripDetailsSkeleton() {
+  return (
+    <div className="details-loader details-loader-trip" aria-live="polite" aria-busy="true">
+      <div className="details-skeleton-banner shimmer" />
+      <div className="details-skeleton-tabs">
+        <span className="details-skeleton-tab shimmer" />
+        <span className="details-skeleton-tab shimmer" />
+        <span className="details-skeleton-tab shimmer" />
+        <span className="details-skeleton-tab shimmer" />
+      </div>
+      <div className="details-skeleton-grid">
+        <div className="details-skeleton-panel">
+          <div className="details-skeleton-line shimmer" />
+          <div className="details-skeleton-line shimmer" />
+          <div className="details-skeleton-line shimmer" />
+        </div>
+        <div className="details-skeleton-panel">
+          <div className="details-skeleton-line shimmer" />
+          <div className="details-skeleton-line shimmer" />
+          <div className="details-skeleton-line short shimmer" />
+        </div>
+      </div>
+      <p>Loading trip details...</p>
+    </div>
+  )
+}
+
 export default function TripDetails() {
   const { tripId } = useParams()
   const navigate = useNavigate()
@@ -349,12 +376,7 @@ export default function TripDetails() {
    }
 
   if (loading) {
-    return (
-      <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-        <div style={{ fontSize: '48px', marginBottom: '16px' }}>✈️</div>
-        <p style={{ color: 'var(--text-light)' }}>Loading trip details...</p>
-      </div>
-    )
+    return <TripDetailsSkeleton />
   }
 
   if (error || !trip) {
